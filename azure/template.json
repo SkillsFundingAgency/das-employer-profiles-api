@@ -1,7 +1,7 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {        
+    "parameters": {
         "apiAppCustomHostName": {
             "type": "string",
             "defaultValue": ""
@@ -215,17 +215,17 @@
     },
     "variables": {
         "deploymentUrlBase": "https://raw.githubusercontent.com/SkillsFundingAgency/das-platform-building-blocks/master/templates/",
-        "profilesResourceNamePrefix": "[toLower(concat('das-', parameters('resourceEnvironmentName'),'-', parameters('profilesServiceName')))]",
-        "profilesResourceGroupName": "[concat(variables('profilesResourceNamePrefix'), '-rg')]",
-        "profilesAppServiceName": "[concat(variables('profilesResourceNamePrefix'), 'api-as')]",
+        "resourceNamePrefix": "[toLower(concat('das-', parameters('resourceEnvironmentName'),'-', parameters('serviceName')))]",
+        "resourceGroupName": "[concat(variables('resourceNamePrefix'), '-rg')]",
+        "apiAppServiceName": "[concat(variables('resourceNamePrefix'), 'api-as')]",
         "databaseName": "[toLower(concat('das-', parameters('resourceEnvironmentName'),'-users-db'))]",
-        "configNames": "SFA.DAS.EmployerProfiles.Api",
+        "configNames": "SFA.DAS.EmployerUsers.Api",
         "privateLinkScopeName": "[toLower(concat('das-', parameters('resourceEnvironmentName'),'-shared-ampls'))]"
     },
     "resources": [
         {
             "apiVersion": "2021-04-01",
-            "name": "[variables('profilesResourceGroupName')]",
+            "name": "[variables('resourceGroupName')]",
             "type": "Microsoft.Resources/resourceGroups",
             "location": "[parameters('resourceGroupLocation')]",
             "tags": "[parameters('tags')]",
@@ -233,9 +233,9 @@
         },
         {
             "apiVersion": "2021-04-01",
-            "name": "[concat(variables('profilesAppServiceName'), '-application-insights-', parameters('utcValue'))]",
+            "name": "[concat(variables('apiAppServiceName'), '-application-insights-', parameters('utcValue'))]",
             "type": "Microsoft.Resources/deployments",
-            "resourceGroup": "[variables('profilesResourceGroupName')]",
+            "resourceGroup": "[variables('resourceGroupName')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -244,10 +244,10 @@
                 },
                 "parameters": {
                     "appInsightsName": {
-                        "value": "[variables('profilesAppServiceName')]"
+                        "value": "[variables('apiAppServiceName')]"
                     },
                     "attachedService": {
-                        "value": "[variables('profilesAppServiceName')]"
+                        "value": "[variables('apiAppServiceName')]"
                     },
                     "logAnalyticsWorkspaceId": {
                         "value": "[resourceId(parameters('logAnalyticsSubscriptionId'),parameters('sharedManagementResourceGroup'),'Microsoft.OperationalInsights/workspaces',parameters('logAnalyticsWorkspaceName'))]"
@@ -255,13 +255,13 @@
                 }
             },
             "dependsOn": [
-                "[variables('profilesResourceGroupName')]"
+                "[variables('resourceGroupName')]"
             ]
         },
         {
             "condition": "[parameters('deployPrivateLinkedScopedResource')]",
             "apiVersion": "2021-04-01",
-            "name": "[concat(variables('profilesAppServiceName'), '-private-link-scoped-', parameters('utcValue'))]",
+            "name": "[concat(variables('apiAppServiceName'), '-private-link-scoped-', parameters('utcValue'))]",
             "type": "Microsoft.Resources/deployments",
             "resourceGroup": "[parameters('sharedEnvResourceGroup')]",
             "properties": {
@@ -275,17 +275,17 @@
                         "value": "[variables('privateLinkScopeName')]"
                     },
                     "scopedResourceName": {
-                        "value": "[variables('profilesAppServiceName')]"
+                        "value": "[variables('apiAppServiceName')]"
                     },
                     "scopedResourceId": {
-                        "value": "[reference(concat(variables('profilesAppServiceName'), '-application-insights-', parameters('utcValue'))).outputs.AppInsightsResourceId.value]"
+                        "value": "[reference(concat(variables('apiAppServiceName'), '-application-insights-', parameters('utcValue'))).outputs.AppInsightsResourceId.value]"
                     }
                 }
             }
         },
         {
             "apiVersion": "2021-04-01",
-            "name": "[concat(variables('profilesAppServiceName'), '-app-service-certificate-', parameters('utcValue'))]",
+            "name": "[concat(variables('apiAppServiceName'), '-app-service-certificate-', parameters('utcValue'))]",
             "type": "Microsoft.Resources/deployments",
             "resourceGroup": "[parameters('sharedEnvResourceGroup')]",
             "properties": {
@@ -296,7 +296,7 @@
                 },
                 "parameters": {
                     "keyVaultCertificateName": {
-                        "value": "[parameters('profilesAppCertificateName')]"
+                        "value": "[parameters('apiAppCertificateName')]"
                     },
                     "keyVaultName": {
                         "value": "[parameters('sharedKeyVaultName')]"
@@ -309,9 +309,9 @@
         },
         {
             "apiVersion": "2021-04-01",
-            "name": "[concat(variables('profilesAppServiceName'), '-', parameters('utcValue'))]",
+            "name": "[concat(variables('apiAppServiceName'), '-', parameters('utcValue'))]",
             "type": "Microsoft.Resources/deployments",
-            "resourceGroup": "[variables('profilesResourceGroupName')]",
+            "resourceGroup": "[variables('resourceGroupName')]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -320,7 +320,7 @@
                 },
                 "parameters": {
                     "appServiceName": {
-                        "value": "[variables('profilesAppServiceName')]"
+                        "value": "[variables('apiAppServiceName')]"
                     },
                     "appServicePlanName": {
                         "value": "[parameters('sharedBackEndAppServicePlanName')]"
@@ -352,7 +352,7 @@
                                 },
                                 {
                                     "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-                                    "value": "[reference(concat(variables('profilesAppServiceName'), '-application-insights-', parameters('utcValue'))).outputs.ConnectionString.value]"
+                                    "value": "[reference(concat(variables('apiAppServiceName'), '-application-insights-', parameters('utcValue'))).outputs.ConnectionString.value]"
                                 },
                                 {
                                     "name": "LoggingRedisConnectionString",
@@ -366,10 +366,10 @@
                         }
                     },
                     "customHostName": {
-                        "value": "[parameters('profilesAppCustomHostName')]"
+                        "value": "[parameters('apiAppCustomHostName')]"
                     },
                     "certificateThumbprint": {
-                        "value": "[reference(concat(variables('profilesAppServiceName'), '-app-service-certificate-', parameters('utcValue'))).outputs.certificateThumbprint.value]"
+                        "value": "[reference(concat(variables('apiAppServiceName'), '-app-service-certificate-', parameters('utcValue'))).outputs.certificateThumbprint.value]"
                     },
                     "ipSecurityRestrictions": {
                         "value": "[parameters('backEndAccessRestrictions')]"
@@ -420,11 +420,11 @@
     "outputs": {
         "ResourceGroupName": {
             "type": "string",
-            "value": "[variables('profilesResourceGroupName')]"
+            "value": "[variables('resourceGroupName')]"
         },
-        "AppServiceName": {
+        "ApiAppServiceName": {
             "type": "string",
-            "value": "[variables('profilesAppServiceName')]"
+            "value": "[variables('apiAppServiceName')]"
         },
         "DatabaseName": {
             "type": "string",
