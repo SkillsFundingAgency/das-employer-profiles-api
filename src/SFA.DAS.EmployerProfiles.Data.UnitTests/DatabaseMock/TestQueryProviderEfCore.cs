@@ -3,9 +3,12 @@ using Microsoft.EntityFrameworkCore.Query;
 
 namespace SFA.DAS.EmployerProfiles.Data.UnitTests.DatabaseMock;
 
-public class TestAsyncEnumerableEfCore<T>(IEnumerable<T> enumerable)
-    : TestQueryProvider<T>(enumerable), IAsyncEnumerable<T>, IAsyncQueryProvider
+public class TestAsyncEnumerableEfCore<T> : TestQueryProvider<T>, IAsyncEnumerable<T>, IAsyncQueryProvider
 {
+    public TestAsyncEnumerableEfCore(IEnumerable<T> enumerable) : base(enumerable) { }
+
+    public TestAsyncEnumerableEfCore(Expression expression) : base(expression) { }
+
     public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
     {
         var expectedResultType = typeof(TResult).GetGenericArguments()[0];
