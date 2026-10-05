@@ -84,6 +84,7 @@ public class UserProfileRepository : IUserProfileRepository
         
         var totalCount = await _employerProfilesDataContext.UserProfileEntities.CountAsync();
         var userProfiles = await _employerProfilesDataContext.UserProfileEntities
+            .OrderBy(user => user.Id)
             .Skip(skip)
             .Take(pageSize)
             .ToListAsync();
